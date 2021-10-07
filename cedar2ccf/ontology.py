@@ -1,7 +1,8 @@
 from string import punctuation
 from stringcase import lowercase, snakecase
 
-from rdflib import Graph, Namespace, URIRef, Literal, OWL, RDFS
+from rdflib import Graph, Namespace, URIRef, Literal
+from rdflib.namespace import OWL, RDFS, DCTERMS
 from rdflib.extras.infixowl import OWL_NS, Ontology, Class, Restriction,\
     Property, BooleanClass
 
@@ -52,9 +53,6 @@ class BSOntology:
         is_characterizing_biomarker_set_of_cell_type =\
             Property(BSOntology._CCF_NS.is_characterizing_biomarker_set_of_cell_type,
                      graph=g)
-        source =\
-            Property(BSOntology._DC_TERMS_NS.source,
-                     baseType=OWL_NS.AnnotationProperty, graph=g)
 
         return BSOntology(
             g,
@@ -70,8 +68,7 @@ class BSOntology:
             is_gene_marker_of_cell_type=is_gene_marker_of_cell_type,
             is_protein_marker_of_cell_type=is_protein_marker_of_cell_type,
             cell_type_has_characterizing_biomarker_set=cell_type_has_characterizing_biomarker_set,
-            is_characterizing_biomarker_set_of_cell_type=is_characterizing_biomarker_set_of_cell_type,
-            source=source)
+            is_characterizing_biomarker_set_of_cell_type=is_characterizing_biomarker_set_of_cell_type)
 
     def mutate(self, instances):
         """
@@ -119,7 +116,7 @@ class BSOntology:
                 doi_str = doi['@value']
                 if doi_str is not None and "doi:" in doi_str:
                     self.graph.add((characterizing_biomarker_set.identifier,
-                                   self.kwargs['source'].identifier,
+                                   DCTERMS.references,
                                    self._expand_doi(doi_str)))
 
             biomarkers = []
