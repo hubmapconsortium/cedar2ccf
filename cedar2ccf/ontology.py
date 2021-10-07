@@ -3,7 +3,7 @@ from stringcase import lowercase, snakecase
 
 from rdflib import Graph, Namespace, URIRef, Literal
 from rdflib.namespace import OWL, RDFS, DCTERMS
-from rdflib.extras.infixowl import OWL_NS, Ontology, Class, Restriction,\
+from rdflib.extras.infixowl import Ontology, Class, Restriction,\
     Property, BooleanClass
 
 
@@ -15,7 +15,6 @@ class BSOntology:
     _CCF_BASE_IRI = "http://purl.org/ccf/"
 
     _CCF_NS = Namespace(_CCF_BASE_IRI)
-    _DC_TERMS_NS = Namespace("http://purl.org/dc/terms/")
     _OBO_NS = Namespace("http://purl.obolibrary.org/obo/")
 
     def __init__(self, graph=None, **kwargs):
@@ -26,9 +25,7 @@ class BSOntology:
     def new(ontology_iri):
         g = Graph()
         g.bind('ccf', BSOntology._CCF_NS)
-        g.bind('dcterms', BSOntology._DC_TERMS_NS)
         g.bind('obo', BSOntology._OBO_NS)
-        g.bind('owl', OWL_NS)
         characterizing_biomarker_set =\
             Class(BSOntology._CCF_NS.characterizing_biomarker_set, graph=g)
         has_member =\
