@@ -27,7 +27,7 @@ setup(name='cedar2ccf',
       license='GPL-3.0',
       classifiers=classifiers,
       install_requires=[
-          'rdflib==5.0.0',
+          'rdflib==6.0.1',
           'stringcase==1.2.0'
       ],
       python_requires='>=3.5, <3.9',
