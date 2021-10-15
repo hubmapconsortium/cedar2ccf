@@ -4,8 +4,11 @@ from string import punctuation
 from stringcase import lowercase, snakecase
 
 from rdflib import Graph, URIRef, Literal
-from rdflib.namespace import OWL, RDFS, DCTERMS
-from rdflib.extras.infixowl import Ontology, Class, Restriction, BooleanClass
+from rdflib.namespace import OWL, RDF, RDFS, DCTERMS
+from rdflib.extras.infixowl import Ontology, Property, Class, Restriction,\
+    BNode, BooleanClass
+
+import re
 
 
 class BSOntology:
@@ -22,12 +25,16 @@ class BSOntology:
         g.bind('ccf', CCF)
         g.bind('obo', OBO)
         g.bind('owl', OWL)
+        g.bind('dcterms', DCTERMS)
 
         # Ontology properties
         Ontology(identifier=URIRef(ontology_iri), graph=g)
 
         # Some definitions
         Class(CCF.characterizing_biomarker_set, graph=g)
+        Property(DCTERMS.references,
+                 baseType=OWL.AnnotationProperty,
+                 graph=g)
 
         return BSOntology(g)
 
@@ -135,20 +142,31 @@ class BSOntology:
                     graph=self.graph
                 )]
 
-            cell_type.subClassOf =\
-                [self._some_values_from(
+            characterizing_biomarker_set_expression =\
+                self._some_values_from(
                     CCF.cell_type_has_characterizing_biomarker_set,
-                    characterizing_biomarker_set)]
+                    characterizing_biomarker_set)
+            cell_type.subClassOf = [characterizing_biomarker_set_expression]
 
             ######################################################
             # Construct the reference annotation
             ######################################################
-            for doi in instance['doi']:
-                doi_str = doi['@value']
-                if doi_str is not None and "doi:" in doi_str:
-                    self.graph.add((characterizing_biomarker_set_iri,
-                                   DCTERMS.references,
-                                   self._expand_doi(doi_str)))
+            references = instance['doi']
+            if len(references) > 0:
+                bn = BNode()
+                self.graph.add((bn, RDF.type, OWL.Axiom))
+                self.graph.add((bn, OWL.annotatedSource,
+                               cell_type_iri))
+                self.graph.add((bn, OWL.annotatedProperty,
+                               RDFS.subClassOf))
+                self.graph.add((bn, OWL.annotatedTarget,
+                               characterizing_biomarker_set_expression
+                               .identifier))
+                for doi in references:
+                    doi_str = doi['@value']
+                    if "doi:" in doi_str or "DOI:" in doi_str:
+                        self.graph.add((bn, DCTERMS.references,
+                                       self._expand_doi(doi_str)))
 
         return BSOntology(self.graph)
 
@@ -162,7 +180,8 @@ class BSOntology:
         return str.translate(str.maketrans('', '', punctuation_excl_dash))
 
     def _expand_doi(self, str):
-        return URIRef(str.replace("doi:", "http://doi.org/"))
+        doi_pattern = re.compile("doi:", re.IGNORECASE)
+        return URIRef(doi_pattern.sub("http://doi.org/", str))
 
     def serialize(self, destination):
         """
