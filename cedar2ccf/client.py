@@ -1,5 +1,6 @@
 from urllib.parse import urlparse, parse_qs, quote_plus
 from cedar2ccf.utils import json_handler, request_delete
+from cedar2ccf.ui import progress_bar
 
 
 class CedarClient:
@@ -49,10 +50,14 @@ class CedarClient:
         Args:
             is_based_on (str): An IRI string representing the template id.
         """
-        for instance_id in self._get_instance_ids(is_based_on):
+        print("Collecting instances...")
+        instance_ids = self._get_instance_ids(is_based_on)
+        for instance_id in progress_bar(instance_ids,
+                                        prefix="Deletion in progress:",
+                                        suffix="Complete",
+                                        length=50):
             identifier = quote_plus(instance_id)
             url = f"{self._BASE_URL}/{self._TEMPLATE_INSTANCES}/{identifier}"
-            print(f"Deleting {instance_id}...")
             request_delete(url, self.api_key)
 
     def _get_instance_ids(self, is_based_on, offset=0, limit=200):
