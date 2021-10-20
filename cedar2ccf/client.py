@@ -1,5 +1,5 @@
-from urllib.parse import quote_plus
-from cedar2ccf.utils import json_handler
+from urllib.parse import urlparse, parse_qs, quote_plus
+from cedar2ccf.utils import json_handler, request_delete
 
 
 class CedarClient:
@@ -24,19 +24,17 @@ class CedarClient:
         self.user_id = user_id
         self.api_key = api_key
 
-    def get_instances(self, is_based_on, limit=None):
+    def get_instances(self, is_based_on):
         """Returns all CEDAR metadata instances given the template id.
 
         Args:
             is_based_on (str): An IRI string representing the template id.
-            limit (int): (Optional) An integer indicating the maximum number
-                of returned instances.
 
         Returns:
             An object containing the instances with the given template id.
         """
         instances = []
-        for instance_id in self._get_instance_ids(is_based_on, limit):
+        for instance_id in self._get_instance_ids(is_based_on):
             identifier = quote_plus(instance_id)
             url = f"{self._BASE_URL}/{self._TEMPLATE_INSTANCES}/{identifier}"
             response = json_handler(url, self.api_key)
@@ -44,12 +42,25 @@ class CedarClient:
 
         return instances
 
-    def _get_instance_ids(self, is_based_on, limit=None):
+    def delete_instances(self, is_based_on):
+        """Delete all CEDAR metadata instances that are base on the given
+           template id.
+
+        Args:
+            is_based_on (str): An IRI string representing the template id.
+        """
+        for instance_id in self._get_instance_ids(is_based_on):
+            identifier = quote_plus(instance_id)
+            url = f"{self._BASE_URL}/{self._TEMPLATE_INSTANCES}/{identifier}"
+            print(f"Deleting {instance_id}...")
+            request_delete(url, self.api_key)
+
+    def _get_instance_ids(self, is_based_on, offset=0, limit=200):
         """
         """
         params = f"{self._VERSION}=latest&{self._IS_BASED_ON}={is_based_on}"
-        if (limit):
-            params = f"{params}&{self._LIMIT}={limit}"
+        params = f"{params}&{self._OFFSET}={offset}"
+        params = f"{params}&{self._LIMIT}={limit}"
 
         url = f"{self._BASE_URL}/{self._SEARCH}?{params}"
 
@@ -59,5 +70,12 @@ class CedarClient:
         for resource in response["resources"]:
             instance_ids.append(resource["@id"])
 
-        return instance_ids
+        paging = response["paging"]
+        if "next" in paging:
+            parsed_url = urlparse(paging["next"])
+            offset = parse_qs(parsed_url.query)["offset"][1]
+            limit = limit
+            instance_ids = instance_ids +\
+                self._get_instance_ids(is_based_on, offset, limit)
 
+        return instance_ids
