@@ -188,5 +188,5 @@ class BSOntology:
     def serialize(self, destination):
         """
         """
-        self.graph.serialize(format='ttl',
+        self.graph.serialize(format='application/rdf+xml',
                              destination=destination)
