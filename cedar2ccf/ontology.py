@@ -164,6 +164,8 @@ class BSOntology:
                                .identifier))
                 for doi in references:
                     doi_str = doi['@value']
+                    if doi_str is None:
+                        continue
                     if "doi:" in doi_str or "DOI:" in doi_str:
                         self.graph.add((bn, DCTERMS.references,
                                        self._expand_doi(doi_str)))
