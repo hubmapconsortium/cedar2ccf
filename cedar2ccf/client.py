@@ -52,6 +52,8 @@ class CedarClient:
         """
         print("Collecting instances...")
         instance_ids = self._get_instance_ids(is_based_on)
+        if not instance_ids:
+            return
         for instance_id in progress_bar(instance_ids,
                                         prefix="Deletion in progress:",
                                         suffix="Complete",
