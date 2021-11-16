@@ -52,6 +52,7 @@ class CCF(DefinedNamespace):
 
     # http://www.w3.org/2002/07/owl#AnnotationProperty
     unit_of_measurement: URIRef
+    is_ftu: URIRef
 
     # http://www.w3.org/2002/07/owl#Class
     characterizing_biomarker_set: URIRef
@@ -60,4 +61,4 @@ class CCF(DefinedNamespace):
     spatial_object_reference: URIRef
     spatial_placement: URIRef
 
-    _NS = Namespace("http://purl.org/ccf/")
+    _NS = Namespace("https://purl.org/ccf/latest/ccf.owl#")
